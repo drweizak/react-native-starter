@@ -1,13 +1,27 @@
-import React, { useState } from 'react';
+import React, { useState, useReducer } from 'react';
 import { StyleSheet, Text, View, Button, FlatList } from 'react-native';
 import ColorCounter from '../components/ColorCounter';
 
 const COLOR_INCREMENT = 15;
 
+const colorsReducer = (state, action) => {
+    // state === {red: 0, blue: 0, green: 0}
+    // action === { type: 'red' || 'green' || 'blue', payload: 15 || -15}
+
+    switch (action.type) {
+        case 'red':
+            return state.red + action.payload > 255 || state.red + action.payload < 0 ? state : { ...state, red: state.red + action.payload };
+        case 'green':
+            return state.green + action.payload > 255 || state.green + action.payload < 0 ? state : { ...state, green: state.green + action.payload };
+        case 'blue':
+            return state.blue + action.payload > 255 || state.blue + action.payload < 0 ? state : { ...state, blue: state.blue + action.payload };
+        default:
+            return state;
+    }
+}
+
 const ColorsScreen = () => {
-    const [red, setRed] = useState(0);
-    const [green, setGreen] = useState(0);
-    const [blue, setBlue] = useState(0);
+    const [state, dispatch] = useReducer(colorsReducer, { red: 0, blue: 0, green: 0 });
 
     const [colors, setColors] = useState([]);
     const getRandomColor = () => {
@@ -15,25 +29,6 @@ const ColorsScreen = () => {
         var g = Math.floor(Math.random() * 256);
         var b = Math.floor(Math.random() * 256);
         return 'rgb(' + r + ',' + g + ',' + b + ')';
-    }
-
-    const setColor = (color, change) => {
-        // color === 'red', 'green', 'blue'
-        // change === +15, -15
-
-        switch (color) {
-            case 'red':
-                red + change > 255 || red + change < 0 ? null : setRed(red + change);
-                return;
-            case 'green':
-                green + change > 255 || green + change < 0 ? null : setGreen(green + change);
-                return;
-            case 'blue':
-                blue + change > 255 || blue + change < 0 ? null : setBlue(blue + change);
-                return;
-            default:
-                return;
-        }
     }
 
     const setNewColor = (newColor) => {
@@ -44,14 +39,14 @@ const ColorsScreen = () => {
 
     return (
         <View>
-            <ColorCounter onIncrease={() => setColor('red', COLOR_INCREMENT)} onDecrease={() => setColor('red', -1 * COLOR_INCREMENT)} color="Red" />
-            <ColorCounter onIncrease={() => setColor('green', COLOR_INCREMENT)} onDecrease={() => setColor('green', -1 * COLOR_INCREMENT)} color="Green" />
-            <ColorCounter onIncrease={() => setColor('blue', COLOR_INCREMENT)} onDecrease={() => setColor('blue', -1 * COLOR_INCREMENT)} color="Blue" />
+            <ColorCounter onIncrease={() => { dispatch({ type: 'red', payload: COLOR_INCREMENT }) }} onDecrease={() => { dispatch(state, { type: 'red', payload: -1 * COLOR_INCREMENT }) }} color="Red" />
+            <ColorCounter onIncrease={() => { dispatch({ type: 'green', payload: COLOR_INCREMENT }) }} onDecrease={() => { dispatch(state, { type: 'green', payload: -1 * COLOR_INCREMENT }) }} color="Green" />
+            <ColorCounter onIncrease={() => { dispatch({ type: 'blue', payload: COLOR_INCREMENT }) }} onDecrease={() => { dispatch(state, { type: 'blue', payload: -1 * COLOR_INCREMENT }) }} color="Blue" />
 
-            <View style={{ height: 100, width: 100, backgroundColor: 'rgb(' + red + ',' + green + ',' + blue + ')' }} />
+            <View style={{ height: 100, width: 100, backgroundColor: 'rgb(' + state.red + ',' + state.green + ',' + state.blue + ')' }} />
 
             <Button title="Add Color" onPress={() => {
-                setNewColor('rgb(' + red + ',' + green + ',' + blue + ')');
+                setNewColor('rgb(' + state.red + ',' + state.green + ',' + state.blue + ')');
             }} />
             <Button title="Add Random Color" onPress={() => {
                 setNewColor(getRandomColor());
